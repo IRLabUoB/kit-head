@@ -5,6 +5,7 @@
   <xacro:include filename="$(find kit_head_description)/model/kit_head.inertia.xacro"/>
   <xacro:include filename="$(find kit_head_description)/model/kit_head.transmission.xacro"/>
   <xacro:include filename="$(find kit_head_description)/model/kit_head.gazebo.xacro"/>
+  <xacro:include filename="$(find kit_head_description)/model/depth_sensor.gazebo.xacro"/>
 
   <xacro:property name="M_PI" value="3.1415926535897931" />
   <xacro:property name="velocity_scale_factor" value="1.0"/>
@@ -14,14 +15,14 @@
 
     <!-- The base of the hand, fixed to its parent. -->
     <joint name="${parent}_${name}_base_joint" type="fixed">
-      <insert_block name="origin"/>
+      <xacro:insert_block name="origin"/>
       <parent link="${parent}"/>
       <child link="${name}_base_link"/>
     </joint>
     
     <link name="${name}_base_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <!-- <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -55,7 +56,7 @@
 
     <link name="${name}_head_1_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -88,7 +89,7 @@
 
     <link name="${name}_head_2_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -121,7 +122,7 @@
 
     <link name="${name}_head_3_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -154,7 +155,7 @@
 
     <link name="${name}_head_4_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -187,7 +188,7 @@
 
     <link name="${name}_head_5_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -220,7 +221,7 @@
 
     <link name="${name}_left_eye_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0.02 0 0" rpy="0 ${M_PI/2} 0"/>
@@ -253,7 +254,7 @@
 
     <link name="${name}_right_eye_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0.02 0 0" rpy="0 ${M_PI/2} 0"/>
@@ -300,7 +301,7 @@
 
     <link name="${name}_asus_link">
       <inertial>
-        <insert_block name="negligible_inertia"/>
+        <xacro:insert_block name="negligible_inertia"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -317,8 +318,40 @@
       </collision>
     </link>
 
+      <!-- ASUS Xtion -->
+    <link name="${name}_camera_depth_frame"/>
+    <link name="${name}_camera_rgb_frame"/>
+    <link name="${name}_camera_depth_optical_frame"/>
+    <link name="${name}_camera_rgb_optical_frame"/>
+
+    <joint name="${name}_camera_depth_frame_joint" type="fixed" >
+      <origin rpy="0 0 0" xyz="0 0.045 0.02" />
+      <parent link="${name}_asus_link"/>
+      <child link="${name}_camera_depth_frame"/>
+    </joint>
+
+    <joint name="${name}_camera_rgb_frame_joint" type="fixed">
+      <origin rpy="0.0 0.0 0.0" xyz="0 0.02 0.02"/>
+      <parent link="${name}_asus_link"/>
+      <child link="${name}_camera_rgb_frame"/>
+    </joint>
+
+    <joint name="${name}_camera_depth_optical_frame_joint" type="fixed" >
+      <origin rpy="${-M_PI/2} 0 ${-M_PI/2}" xyz="0 0 0" />
+      <parent link="${name}_camera_depth_frame"/>
+      <child link="${name}_camera_depth_optical_frame"/>
+    </joint>
+
+    <joint name="${name}_camera_rgb_optical_frame_joint" type="fixed" >
+      <origin rpy="${-M_PI/2} 0 ${-M_PI/2}" xyz="0 0 0" />
+      <parent link="${name}_camera_rgb_frame"/>
+      <child link="${name}_camera_rgb_optical_frame"/>
+    </joint>
+
+
     <xacro:kit_head_transmission name="${name}"/>
     <xacro:kit_head_gazebo name="${name}"/>
+    <xacro:head_depth_sensor name="${name}" parent="${name}_asus_link"/>
 
   </xacro:macro>
 

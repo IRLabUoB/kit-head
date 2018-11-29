@@ -80,6 +80,9 @@ bool DefaultKITHeadHWSim::initSim(
   joint_position_command_.resize(n_dof_);
   joint_velocity_command_.resize(n_dof_);
 
+  for(unsigned int j=0; j < n_dof_; j++){
+    printf("JOINT NAME[%d]: %s",j,transmissions[j].joints_[0].name_);
+  }
   // Initialize values
   for(unsigned int j=0; j < n_dof_; j++)
   {
@@ -127,6 +130,8 @@ bool DefaultKITHeadHWSim::initSim(
 
     // Add data from transmission
     joint_names_[j] = transmissions[j].joints_[0].name_;
+
+
     joint_position_[j] = 1.0;
     joint_velocity_[j] = 0.0;
     joint_effort_[j] = 1.0;  // N/m for continuous joints
@@ -146,7 +151,7 @@ bool DefaultKITHeadHWSim::initSim(
 
     // Decide what kind of command interface this actuator/joint has
     hardware_interface::JointHandle joint_handle;
-    if(hardware_interface == "EffortJointInterface")
+    if(hardware_interface == "hardware_interface/EffortJointInterface")
     {
       // Create effort joint interface
       joint_control_methods_[j] = EFFORT;
@@ -154,7 +159,7 @@ bool DefaultKITHeadHWSim::initSim(
                                                      &joint_effort_command_[j]);
       ej_interface_.registerHandle(joint_handle);
     }
-    else if(hardware_interface == "PositionJointInterface")
+    else if(hardware_interface == "hardware_interface/PositionJointInterface")
     {
       // Create position joint interface
       joint_control_methods_[j] = POSITION;
@@ -162,7 +167,7 @@ bool DefaultKITHeadHWSim::initSim(
                                                      &joint_position_command_[j]);
       pj_interface_.registerHandle(joint_handle);
     }
-    else if(hardware_interface == "VelocityJointInterface")
+    else if(hardware_interface == "hardware_interface/VelocityJointInterface")
     {
       // Create velocity joint interface
       joint_control_methods_[j] = VELOCITY;
@@ -216,7 +221,8 @@ bool DefaultKITHeadHWSim::initSim(
         // joint->SetMaxForce() must be called if joint->SetAngle() or joint->SetVelocity() are
         // going to be called. joint->SetMaxForce() must *not* be called if joint->SetForce() is
         // going to be called.
-        joint->SetMaxForce(0, joint_effort_limits_[j]);
+        joint->SetParam("fmax", 0, joint_effort_limits_[j]);
+        //joint->SetMaxForce(0, joint_effort_limits_[j]);
       }
     }
   }

@@ -291,7 +291,8 @@ bool KITHeadHWSimPlugin::parseTransmissionsFromURDF(const std::string& urdf_stri
   std::vector<transmission_interface::TransmissionInfo>::iterator it = transmissions_.begin();
   for(; it != transmissions_.end(); ) 
   {
-    if (robot_namespace_.compare(it->robot_namespace_) != 0)
+    if (it->name_.compare(0,robot_namespace_.length(),robot_namespace_) != 0 )
+    //if (robot_namespace_.compare(it->robot_namespace_) != 0)
     {
       ROS_DEBUG_STREAM("kit_head_hw_sim_plugin deleted transmission " << it->name_ << " because it is not in the same robotNamespace as this plugin. This might be normal in a multi-robot configuration though.");
       it = transmissions_.erase(it);
