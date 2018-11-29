@@ -182,6 +182,7 @@
 				<robotNamespace>${name}</robotNamespace>
 			</plugin>
 		</gazebo>
+		
 
 	</xacro:macro>
 
