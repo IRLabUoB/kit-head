@@ -19,15 +19,15 @@
   	<rosparam command="load" file="$(find kit_head_hw)/config/hw_interface.yaml"/>
 
   	<!-- Load gazebo controller configurations -->
-  <!-- Note: You MUST load these PID parameters for all joints that are using
+  	<!-- Note: You MUST load these PID parameters for all joints that are using
        the PositionJointInterface, otherwise the arm + gripper will act like a
        giant parachute, counteracting gravity, and causing some of the wheels
        to lose contact with the ground, so the robot won't be able to properly
        navigate. See
        https://github.com/ros-simulation/gazebo_ros_pkgs/issues/612 -->
-<!-- 	<rosparam file="$(find mimic_joint_gazebo_tutorial)/config/gazebo/gazebo_controller.yaml" command="load" />
+	<rosparam file="$(find kit_head_hw)/config/gazebo_controllers.yaml" command="load" />
   	
- -->
+
 	<!-- LAUNCH IMPLEMENTATION -->
 
 	<!-- the urdf/sdf parameter -->
@@ -65,7 +65,7 @@
 
   	<group ns="head">
   		<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
-		<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="joint_state_controller joint_trajectory_controller"/>
+		<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="joint_state_controller joint_trajectory_controller"/> <!-- joint_trajectory_effort_controller -->
 	</group>
 	
 	
