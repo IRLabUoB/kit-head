@@ -1,0 +1,14 @@
+head:
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100  
+  joint_trajectory_controller:
+    type: position_controllers/JointTrajectoryController
+    joints: 
+      - head_neck_pitch_joint
+      - head_neck_roll_joint
+      - head_neck_yaw_joint
+      - head_head_tilt_joint
+      - head_eyes_tilt_joint
+      - head_left_eye_joint
+      - head_right_eye_joint
