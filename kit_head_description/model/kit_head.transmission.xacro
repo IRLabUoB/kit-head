@@ -4,11 +4,15 @@
 
 	<xacro:macro name="kit_head_transmission" params="name">
 
+		<xacro:property name="Interface10" value="hardware_interface/PositionJointInterface"/>
+		<xacro:property name="Interface30" value="hardware_interface/EffortJointInterface"/>
+
 		<transmission name="${name}_neck_pitch_joint_trans">
 			<robotNamespace>${name}</robotNamespace>
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_neck_pitch_joint">
-				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+				<hardwareInterface>${Interface10}</hardwareInterface>
+				<!-- <hardwareInterface>${Interface30}</hardwareInterface> -->
 			</joint>
 			<actuator name="${name}_neck_pitch_joint_motor">
 				<mechanicalReduction>1.0</mechanicalReduction>
@@ -19,7 +23,8 @@
 			<robotNamespace>${name}</robotNamespace>
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_neck_roll_joint">
-				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+				<hardwareInterface>${Interface10}</hardwareInterface>
+				<!-- <hardwareInterface>${Interface30}</hardwareInterface> -->
 			</joint>
 			<actuator name="${name}_neck_roll_joint_motor">
 				<mechanicalReduction>1.0</mechanicalReduction>
@@ -30,7 +35,8 @@
 			<robotNamespace>${name}</robotNamespace>
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_neck_yaw_joint">
-				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+				<hardwareInterface>${Interface10}</hardwareInterface>
+				<!-- <hardwareInterface>${Interface30}</hardwareInterface> -->
 			</joint>
 			<actuator name="${name}_neck_yaw_joint_motor">
 				<mechanicalReduction>1.0</mechanicalReduction>
@@ -41,7 +47,8 @@
 			<robotNamespace>${name}</robotNamespace>
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_head_tilt_joint">
-				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+				<hardwareInterface>${Interface10}</hardwareInterface>
+				<!-- <hardwareInterface>${Interface30}</hardwareInterface> -->
 			</joint>
 			<actuator name="${name}_head_tilt_joint_motor">
 				<mechanicalReduction>1.0</mechanicalReduction>
@@ -52,7 +59,8 @@
 			<robotNamespace>${name}</robotNamespace>
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_eyes_tilt_joint">
-				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+				<hardwareInterface>${Interface10}</hardwareInterface>
+				<!-- <hardwareInterface>${Interface30}</hardwareInterface> -->
 			</joint>
 			<actuator name="${name}_eyes_tilt_joint_motor">
 				<mechanicalReduction>1.0</mechanicalReduction>
@@ -63,7 +71,8 @@
 			<robotNamespace>${name}</robotNamespace>
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_left_eye_joint">
-				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+				<hardwareInterface>${Interface10}</hardwareInterface>
+				<!-- <hardwareInterface>${Interface30}</hardwareInterface> -->
 			</joint>
 			<actuator name="${name}_left_eye_joint_motor">
 				<mechanicalReduction>1.0</mechanicalReduction>
@@ -74,7 +83,8 @@
 			<robotNamespace>${name}</robotNamespace>
 			<type>transmission_interface/SimpleTransmission</type>
 			<joint name="${name}_right_eye_joint">
-				<hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+				<hardwareInterface>${Interface10}</hardwareInterface>
+				<!-- <hardwareInterface>${Interface30}</hardwareInterface> -->
 			</joint>
 			<actuator name="${name}_right_eye_joint_motor">
 				<mechanicalReduction>1.0</mechanicalReduction>

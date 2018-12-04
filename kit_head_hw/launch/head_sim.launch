@@ -17,8 +17,17 @@
 	<!-- Load joint controller configurations from YAML file to parameter server -->
   	<rosparam file="$(find kit_head_hw)/config/controllers.yaml" command="load"/>
   	<rosparam command="load" file="$(find kit_head_hw)/config/hw_interface.yaml"/>
-  	
 
+  	<!-- Load gazebo controller configurations -->
+  <!-- Note: You MUST load these PID parameters for all joints that are using
+       the PositionJointInterface, otherwise the arm + gripper will act like a
+       giant parachute, counteracting gravity, and causing some of the wheels
+       to lose contact with the ground, so the robot won't be able to properly
+       navigate. See
+       https://github.com/ros-simulation/gazebo_ros_pkgs/issues/612 -->
+<!-- 	<rosparam file="$(find mimic_joint_gazebo_tutorial)/config/gazebo/gazebo_controller.yaml" command="load" />
+  	
+ -->
 	<!-- LAUNCH IMPLEMENTATION -->
 
 	<!-- the urdf/sdf parameter -->
@@ -29,7 +38,7 @@
 		<rosparam param="source_list">[/head/joint_states]</rosparam>
 		<remap from="/joint_states" to="/head/joint_states" />
 	</node>
-	<node ns="head" name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+	
 	
 	<group if="$(arg use_rviz)">
 		<node name="head_rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find kit_head_description)/launch/rviz_config.rviz" output="screen"/>
@@ -38,6 +47,7 @@
 	<!-- robot simulation uses the full robot description -->
 	<group if="$(arg use_head_sim)">
 		<!-- spawn the robot in gazebo -->
+		<param name="robot_description" command="$(find xacro)/xacro --inorder $(find kit_head_description)/robot/kit_head.urdf.xacro"/>
 		<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model $(arg robot_name)"  respawn="false" output="screen" />
 
 		<!-- enable/disable gui at will, the rviz listens to the simulation -->
@@ -46,7 +56,7 @@
 			<arg name="paused" value="false"/>
 			<arg name="use_sim_time" value="true"/>
 			<arg name="gui" value="true"/>
-			<arg name="headless" value="false"/>
+			<arg name="headless" value="true"/>
 			<arg name="debug" value="false"/>
 
 		</include>
@@ -54,9 +64,10 @@
 
 
   	<group ns="head">
+  		<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
 		<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="joint_state_controller joint_trajectory_controller"/>
 	</group>
-
+	
 	
 	
 

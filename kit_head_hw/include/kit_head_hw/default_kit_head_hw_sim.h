@@ -38,38 +38,30 @@
    Desc:   Hardware Interface for any simulated robot in Gazebo
 */
 
-#ifndef __KIT_HEAD_HW_____DEFAULT_KIT_HEAD_HW_SIM_H_
-#define __KIT_HEAD_HW_____DEFAULT_KIT_HEAD_HW_SIM_H_
+#ifndef _GAZEBO_ROS_CONTROL___DEFAULT_KIT_HEAD_HW_SIM_H_
+#define _GAZEBO_ROS_CONTROL___DEFAULT_KIT_HEAD_HW_SIM_H_
 
-// the main hw sim class
-#include <kit_head_hw/kit_head_hw_sim.h>
+#include <gazebo_ros_control/default_robot_hw_sim.h>
+
 
 namespace kit_head_hw
 {
 
-class DefaultKITHeadHWSim : public kit_head_hw::KITHeadHWSim
-{
+class DefaultKITHeadHWSim : public gazebo_ros_control::DefaultRobotHWSim {
 public:
+      virtual bool initSim(
+        const std::string& robot_namespace,
+        ros::NodeHandle model_nh,
+        gazebo::physics::ModelPtr parent_model,
+        const urdf::Model *const urdf_model,
+        std::vector<transmission_interface::TransmissionInfo> transmissions);
 
-  virtual ~DefaultKITHeadHWSim() { }
 
-  virtual bool initSim(
-    const std::string& robot_namespace,
-    ros::NodeHandle model_nh,
-    gazebo::physics::ModelPtr parent_model,
-    const urdf::Model *const urdf_model,
-    std::vector<transmission_interface::TransmissionInfo> transmissions);
-
-  virtual void readSim(ros::Time time, ros::Duration period);
-
-  virtual void writeSim(ros::Time time, ros::Duration period);
-
-  virtual void eStopActive(const bool active);
-
+      virtual void writeSim(ros::Time time, ros::Duration period);
 };
 
 typedef boost::shared_ptr<DefaultKITHeadHWSim> DefaultKITHeadHWSimPtr;
 
 }
 
-#endif // #ifndef __KIT_HEAD_HW_____DEFAULT_KIT_HEAD_HW_SIM_H_
+#endif // #ifndef __GAZEBO_ROS_CONTROL_PLUGIN_DEFAULT_ROBOT_HW_SIM_H_

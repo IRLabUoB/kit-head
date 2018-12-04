@@ -37,21 +37,13 @@
 /* Author: Dave Coleman, Jonathan Bohren
    Desc:   Hardware Interface for any simulated robot in Gazebo
 */
-   
+
+
 #include <kit_head_hw/default_kit_head_hw_sim.h>
-
-namespace
-{
-
-double clamp(const double val, const double min_val, const double max_val)
-{
-  return std::min(std::max(val, min_val), max_val);
-}
-
-}
 
 namespace kit_head_hw
 {
+
 
 bool DefaultKITHeadHWSim::initSim(
   const std::string& robot_namespace,
@@ -59,300 +51,47 @@ bool DefaultKITHeadHWSim::initSim(
   gazebo::physics::ModelPtr parent_model,
   const urdf::Model *const urdf_model,
   std::vector<transmission_interface::TransmissionInfo> transmissions)
-{
-  // getJointLimits() searches joint_limit_nh for joint limit parameters. The format of each
-  // parameter's name is "joint_limits/<joint name>". An example is "joint_limits/axle_joint".
-  const ros::NodeHandle joint_limit_nh(model_nh, robot_namespace);
-
-  // Resize vectors to our DOF
-  n_dof_ = transmissions.size();
-  joint_names_.resize(n_dof_);
-  joint_types_.resize(n_dof_);
-  joint_lower_limits_.resize(n_dof_);
-  joint_upper_limits_.resize(n_dof_);
-  joint_effort_limits_.resize(n_dof_);
-  joint_control_methods_.resize(n_dof_);
-  pid_controllers_.resize(n_dof_);
-  joint_position_.resize(n_dof_);
-  joint_velocity_.resize(n_dof_);
-  joint_effort_.resize(n_dof_);
-  joint_effort_command_.resize(n_dof_);
-  joint_position_command_.resize(n_dof_);
-  joint_velocity_command_.resize(n_dof_);
-
-  for(unsigned int j=0; j < n_dof_; j++){
-    printf("JOINT NAME[%d]: %s",j,transmissions[j].joints_[0].name_);
-  }
-  // Initialize values
-  for(unsigned int j=0; j < n_dof_; j++)
   {
-    // Check that this transmission has one joint
-    if(transmissions[j].joints_.size() == 0)
-    {
-      ROS_WARN_STREAM_NAMED("default_kit_head_hw_sim","Transmission " << transmissions[j].name_
-        << " has no associated joints.");
-      continue;
-    }
-    else if(transmissions[j].joints_.size() > 1)
-    {
-      ROS_WARN_STREAM_NAMED("default_kit_head_hw_sim","Transmission " << transmissions[j].name_
-        << " has more than one joint. Currently the default robot hardware simulation "
-        << " interface only supports one.");
-      continue;
-    }
 
-    std::vector<std::string> joint_interfaces = transmissions[j].joints_[0].hardware_interfaces_;
-    if (joint_interfaces.empty() &&
-        !(transmissions[j].actuators_.empty()) &&
-        !(transmissions[j].actuators_[0].hardware_interfaces_.empty()))
-    {
-      // TODO: Deprecate HW interface specification in actuators in ROS J
-      joint_interfaces = transmissions[j].actuators_[0].hardware_interfaces_;
-      ROS_WARN_STREAM_NAMED("default_kit_head_hw_sim", "The <hardware_interface> element of tranmission " <<
-        transmissions[j].name_ << " should be nested inside the <joint> element, not <actuator>. " <<
-        "The transmission will be properly loaded, but please update " <<
-        "your robot model to remain compatible with future versions of the plugin.");
-    }
-    if (joint_interfaces.empty())
-    {
-      ROS_WARN_STREAM_NAMED("default_kit_head_hw_sim", "Joint " << transmissions[j].joints_[0].name_ <<
-        " of transmission " << transmissions[j].name_ << " does not specify any hardware interface. " <<
-        "Not adding it to the robot hardware simulation.");
-      continue;
-    }
-    else if (joint_interfaces.size() > 1)
-    {
-      ROS_WARN_STREAM_NAMED("default_kit_head_hw_sim", "Joint " << transmissions[j].joints_[0].name_ <<
-        " of transmission " << transmissions[j].name_ << " specifies multiple hardware interfaces. " <<
-        "Currently the default robot hardware simulation interface only supports one. Using the first entry!");
-      //continue;
-    }
+    // filter transmission interface
 
-    // Add data from transmission
-    joint_names_[j] = transmissions[j].joints_[0].name_;
+    std::vector<transmission_interface::TransmissionInfo> transmissions_filtered;
+    int njoints = 7;
 
+    std::vector<std::string> joint_names;
 
-    joint_position_[j] = 1.0;
-    joint_velocity_[j] = 0.0;
-    joint_effort_[j] = 1.0;  // N/m for continuous joints
-    joint_effort_command_[j] = 0.0;
-    joint_position_command_[j] = 0.0;
-    joint_velocity_command_[j] = 0.0;
+    joint_names.push_back( robot_namespace + std::string("_neck_pitch_joint") );
+    joint_names.push_back( robot_namespace + std::string("_neck_roll_joint") );
+    joint_names.push_back( robot_namespace + std::string("_neck_yaw_joint") );
+    joint_names.push_back( robot_namespace + std::string("_head_tilt_joint") );
+    joint_names.push_back( robot_namespace + std::string("_eyes_tilt_joint") );
+    joint_names.push_back( robot_namespace + std::string("_left_eye_joint") );
+    joint_names.push_back( robot_namespace + std::string("_right_eye_joint") );
 
-    const std::string& hardware_interface = joint_interfaces.front();
-
-    // Debug
-    ROS_DEBUG_STREAM_NAMED("default_kit_head_hw_sim","Loading joint '" << joint_names_[j]
-      << "' of type '" << hardware_interface << "'");
-
-    // Create joint state interface for all joints
-    js_interface_.registerHandle(hardware_interface::JointStateHandle(
-        joint_names_[j], &joint_position_[j], &joint_velocity_[j], &joint_effort_[j]));
-
-    // Decide what kind of command interface this actuator/joint has
-    hardware_interface::JointHandle joint_handle;
-    if(hardware_interface == "hardware_interface/EffortJointInterface")
+    for (int j = 0; j < njoints; ++j)
     {
-      // Create effort joint interface
-      joint_control_methods_[j] = EFFORT;
-      joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
-                                                     &joint_effort_command_[j]);
-      ej_interface_.registerHandle(joint_handle);
-    }
-    else if(hardware_interface == "hardware_interface/PositionJointInterface")
-    {
-      // Create position joint interface
-      joint_control_methods_[j] = POSITION;
-      joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
-                                                     &joint_position_command_[j]);
-      pj_interface_.registerHandle(joint_handle);
-    }
-    else if(hardware_interface == "hardware_interface/VelocityJointInterface")
-    {
-      // Create velocity joint interface
-      joint_control_methods_[j] = VELOCITY;
-      joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
-                                                     &joint_velocity_command_[j]);
-      vj_interface_.registerHandle(joint_handle);
-    }
-    else
-    {
-      ROS_FATAL_STREAM_NAMED("default_kit_head_hw_sim","No matching hardware interface found for '"
-        << hardware_interface );
-      return false;
-    }
-
-    // Get the gazebo joint that corresponds to the robot joint.
-    //ROS_DEBUG_STREAM_NAMED("default_kit_head_hw_sim", "Getting pointer to gazebo joint: "
-    //  << joint_names_[j]);
-    gazebo::physics::JointPtr joint = parent_model->GetJoint(joint_names_[j]);
-    if (!joint)
-    {
-      ROS_ERROR_STREAM("This robot has a joint named \"" << joint_names_[j]
-        << "\" which is not in the gazebo model.");
-      return false;
-    }
-    sim_joints_.push_back(joint);
-
-    registerJointLimits(joint_names_[j], joint_handle, joint_control_methods_[j],
-                        joint_limit_nh, urdf_model,
-                        &joint_types_[j], &joint_lower_limits_[j], &joint_upper_limits_[j],
-                        &joint_effort_limits_[j]);
-    if (joint_control_methods_[j] != EFFORT)
-    {
-      // Initialize the PID controller. If no PID gain values are found, use joint->SetAngle() or
-      // joint->SetVelocity() to control the joint.
-      const ros::NodeHandle nh(model_nh, robot_namespace + "/gazebo_ros_control/pid_gains/" +
-                               joint_names_[j]);
-      if (pid_controllers_[j].init(nh, true))
+      // std::cout << "Check joint " << joint_names_[j] << std::endl;
+      std::vector<transmission_interface::TransmissionInfo>::iterator it = transmissions.begin();
+      for(; it != transmissions.end(); ++it)
       {
-        switch (joint_control_methods_[j])
+        std::cout << "With transmission " << it->name_ << " trying to match: " << joint_names[j] << std::endl;
+        if (joint_names[j].compare(it->joints_[0].name_) == 0)
         {
-          case POSITION:
-            joint_control_methods_[j] = POSITION_PID;
-            break;
-          case VELOCITY:
-            joint_control_methods_[j] = VELOCITY_PID;
-            break;
+          transmissions_filtered.push_back( *it );
+          std::cout << "Found a match for transmission " << it->name_ << std::endl;
         }
       }
-      else
-      {
-        // joint->SetMaxForce() must be called if joint->SetAngle() or joint->SetVelocity() are
-        // going to be called. joint->SetMaxForce() must *not* be called if joint->SetForce() is
-        // going to be called.
-        joint->SetParam("fmax", 0, joint_effort_limits_[j]);
-        //joint->SetMaxForce(0, joint_effort_limits_[j]);
-      }
     }
+
+    bool ret = gazebo_ros_control::DefaultRobotHWSim::initSim(robot_namespace, model_nh, parent_model, urdf_model, transmissions_filtered);
+
+    return ret;
   }
-
-  // Register interfaces
-  registerInterface(&js_interface_);
-  registerInterface(&ej_interface_);
-  registerInterface(&pj_interface_);
-  registerInterface(&vj_interface_);
-
-  // Initialize the emergency stop code.
-  e_stop_active_ = false;
-  last_e_stop_active_ = false;
-
-  return true;
-}
-
-void DefaultKITHeadHWSim::readSim(ros::Time time, ros::Duration period)
-{
-  for(unsigned int j=0; j < n_dof_; j++)
-  {
-    // Gazebo has an interesting API...
-    if (joint_types_[j] == urdf::Joint::PRISMATIC)
-    {
-      joint_position_[j] = sim_joints_[j]->GetAngle(0).Radian();
-    }
-    else
-    {
-      joint_position_[j] += angles::shortest_angular_distance(joint_position_[j],
-                            sim_joints_[j]->GetAngle(0).Radian());
-    }
-    joint_velocity_[j] = sim_joints_[j]->GetVelocity(0);
-    joint_effort_[j] = sim_joints_[j]->GetForce((unsigned int)(0));
-  }
-}
 
 void DefaultKITHeadHWSim::writeSim(ros::Time time, ros::Duration period)
 {
-  // If the E-stop is active, joints controlled by position commands will maintain their positions.
-  if (e_stop_active_)
-  {
-    if (!last_e_stop_active_)
-    {
-      last_joint_position_command_ = joint_position_;
-      last_e_stop_active_ = true;
-    }
-    joint_position_command_ = last_joint_position_command_;
-  }
-  else
-  {
-    last_e_stop_active_ = false;
-  }
-
-  ej_sat_interface_.enforceLimits(period);
-  ej_limits_interface_.enforceLimits(period);
-  pj_sat_interface_.enforceLimits(period);
-  pj_limits_interface_.enforceLimits(period);
-  vj_sat_interface_.enforceLimits(period);
-  vj_limits_interface_.enforceLimits(period);
-
-  for(unsigned int j=0; j < n_dof_; j++)
-  {
-    switch (joint_control_methods_[j])
-    {
-      case EFFORT:
-        {
-          const double effort = e_stop_active_ ? 0 : joint_effort_command_[j];
-          sim_joints_[j]->SetForce(0, effort);
-        }
-        break;
-
-      case POSITION:
-#if GAZEBO_MAJOR_VERSION >= 4
-        sim_joints_[j]->SetPosition(0, joint_position_command_[j]);
-#else
-        sim_joints_[j]->SetAngle(0, joint_position_command_[j]);
-#endif
-        break;
-
-      case POSITION_PID:
-        {
-          double error;
-          switch (joint_types_[j])
-          {
-            case urdf::Joint::REVOLUTE:
-              angles::shortest_angular_distance_with_limits(joint_position_[j],
-                                                            joint_position_command_[j],
-                                                            joint_lower_limits_[j],
-                                                            joint_upper_limits_[j],
-                                                            error);
-              break;
-            case urdf::Joint::CONTINUOUS:
-              error = angles::shortest_angular_distance(joint_position_[j],
-                                                        joint_position_command_[j]);
-              break;
-            default:
-              error = joint_position_command_[j] - joint_position_[j];
-          }
-
-          const double effort_limit = joint_effort_limits_[j];
-          const double effort = clamp(pid_controllers_[j].computeCommand(error, period),
-                                      -effort_limit, effort_limit);
-          sim_joints_[j]->SetForce(0, effort);
-        }
-        break;
-
-      case VELOCITY:
-        sim_joints_[j]->SetVelocity(0, e_stop_active_ ? 0 : joint_velocity_command_[j]);
-        break;
-
-      case VELOCITY_PID:
-        double error;
-        if (e_stop_active_)
-          error = -joint_velocity_[j];
-        else
-          error = joint_velocity_command_[j] - joint_velocity_[j];
-        const double effort_limit = joint_effort_limits_[j];
-        const double effort = clamp(pid_controllers_[j].computeCommand(error, period),
-                                    -effort_limit, effort_limit);
-        sim_joints_[j]->SetForce(0, effort);
-        break;
-    }
-  }
+  gazebo_ros_control::DefaultRobotHWSim::writeSim(time, period);
+}
 }
 
-void DefaultKITHeadHWSim::eStopActive(const bool active)
-{
-  e_stop_active_ = active;
-}
-
-}
-
-PLUGINLIB_EXPORT_CLASS(kit_head_hw::DefaultKITHeadHWSim, kit_head_hw::KITHeadHWSim)
+PLUGINLIB_EXPORT_CLASS(kit_head_hw::DefaultKITHeadHWSim, gazebo_ros_control::RobotHWSim)

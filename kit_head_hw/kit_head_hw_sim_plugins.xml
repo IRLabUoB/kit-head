@@ -1,11 +1,12 @@
-<library path="lib/libdefault_kit_head_hw_sim">
+<library path="lib/libkit_head_hw_sim">
 
   <class
     name="kit_head_hw/DefaultKITHeadHWSim"
     type="kit_head_hw::DefaultKITHeadHWSim"
-    base_class_type="kit_head_hw::KITHeadHWSim">
+    base_class_type="gazebo_ros_control::RobotHWSim">
     <description>
       A default robot simulation interface which constructs joint handles from an SDF/URDF for the KIT head.
     </description>
   </class>
 </library>
+
